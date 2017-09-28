@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
 
@@ -17,8 +16,12 @@ namespace ImageUploader.Converters
         /// </summary>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            byte[] imageData = (byte[])value;
-            if (imageData == null || imageData.Length == 0) return null;
+            byte[] imageData = (value == null || !(value is byte[]) || (value as byte[]).Length == 0 ? 
+                null : 
+                value as byte[]);
+            if (imageData == null)
+                return null;
+
             BitmapImage image = new BitmapImage();
             using (var stream = new MemoryStream(imageData))
             {

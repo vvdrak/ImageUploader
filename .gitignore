@@ -1,3 +1,5 @@
 **/bin/
 **/obj/
 .vs/ImageReader/v14/*
+/ImageUploader/packages
+/ImageUploader/.vs/ImageUploader

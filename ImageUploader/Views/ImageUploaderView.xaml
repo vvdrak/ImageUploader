@@ -17,16 +17,13 @@
             </Grid.RowDefinitions>
             <Grid.Resources>
                 <converter:ByteArrayToBitmapImageConverter x:Key="BATBIC"/>
-            </Grid.Resources>
 
-            <Image Source="{Binding ImageData, Converter={StaticResource BATBIC}, IsAsync=True}" Stretch="Fill"/>
-            <Button Content="Загрузить картинку" Command="{Binding StartCommand, IsAsync=True}" Grid.Row="4"/>
-            <Button Content="Остановить загрузку" Command="{Binding StopCommand}" Grid.Row="6"/>
-            <TextBox Text="{Binding URL, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" VerticalContentAlignment="Center" Tag="Введите URL картинки">
-                <TextBox.Style>
-                    <Style TargetType="{x:Type TextBox}">
+                <Style TargetType="{x:Type TextBox}">
+                    <Style.Setters>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
                         <Setter Property="SnapsToDevicePixels" Value="True"/>
                         <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="{x:Type TextBox}">
@@ -44,9 +41,20 @@
                                 </ControlTemplate>
                             </Setter.Value>
                         </Setter>
-                    </Style>
-                </TextBox.Style>
-            </TextBox>
+                    </Style.Setters>
+                    <Style.Triggers>
+                        <Trigger Property="Validation.HasError" Value="True">
+                            <Setter Property="BorderBrush" Value="Red"/>
+                            <Setter Property="ToolTip" Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=(Validation.Errors)[0].ErrorContent}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Resources>
+
+            <Image Source="{Binding ImageData, IsAsync=True, Converter={StaticResource BATBIC}}" Stretch="Fill"/>
+            <Button Content="Загрузить картинку" Command="{Binding StartCommand}" Grid.Row="4"/>
+            <Button Content="Остановить загрузку" Command="{Binding StopCommand}" Grid.Row="6"/>
+            <TextBox Text="{Binding URL, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Grid.Row="2" Tag="Введите URL картинки"/>
         </Grid>
     </Border>
 </UserControl>
