@@ -1,21 +1,18 @@
-﻿using ImageUploader.Events;
-using ImageUploader.Helpers;
+﻿using ImageUploader.Helpers;
 using ImageUploader.Models;
 
 using Prism.Commands;
-using Prism.Events;
 using Prism.Mvvm;
 
 using System;
+using System.ComponentModel;
 using System.Media;
 
 namespace ImageUploader.ViewModels
 {
-    public sealed class ImageUploaderViewModel : BindableBase
+    public sealed class ImageUploaderViewModel : BindableBase, IDataErrorInfo
     {
         private Uploader _uploader;
-        private IEventAggregator _eventAggregator;
-        private BitmapWrapper _bitmapWrapper = new BitmapWrapper();
 
         #region Binding area
         private bool _isBusy;
@@ -33,26 +30,28 @@ namespace ImageUploader.ViewModels
             }
         }
 
+        private byte[] _imageData;
         /// <summary>
         /// Массив байт загруженной картинки
         /// </summary>
         public byte[] ImageData
         {
-            get { return _bitmapWrapper.ImageData; }
-            set { SetProperty(ref _bitmapWrapper.ImageData, value); }
+            get { return _imageData; }
+            set { SetProperty(ref _imageData, value); }
         }
 
+        private string _url;
         /// <summary>
         /// Путь до картинки
         /// </summary>
         public string URL
         {
-            get { return _bitmapWrapper.URL; }
+            get { return _url; }
             set
             {
-                SetProperty(ref _bitmapWrapper.URL, value);
+                SetProperty(ref _url, value);
                 // добавляем команду к глобальной если соблюдены все условия ее выполнения. В противном случае удаляем из глобальной
-                if (_bitmapWrapper.Error == null && !GlobalCommands.StartAllCommand.RegisteredCommands.Contains(StartCommand))
+                if (Error == null && !GlobalCommands.StartAllCommand.RegisteredCommands.Contains(StartCommand))
                     GlobalCommands.StartAllCommand.RegisterCommand(StartCommand);
                 else
                     GlobalCommands.StartAllCommand.RegisteredCommands.Remove(StartCommand);
@@ -65,7 +64,7 @@ namespace ImageUploader.ViewModels
         /// Запуск загрузки картинки по указанному пути <see cref="URL"/>
         /// </summary>
         public DelegateCommand StartCommand =>
-            _start ?? (_start = new DelegateCommand(ExecuteStart, () => !IsBusy && _bitmapWrapper.Error == null)
+            _start ?? (_start = new DelegateCommand(ExecuteStart, () => !IsBusy && Error == null)
                 .ObservesProperty(() => URL)
                 .ObservesProperty(() => IsBusy));
 
@@ -77,12 +76,9 @@ namespace ImageUploader.ViewModels
             _stop ?? (_stop = new DelegateCommand(ExecuteStop, () => IsBusy)
                 .ObservesProperty(() => IsBusy));
 
-        public ImageUploaderViewModel(IEventAggregator eventAggregator)
+        public ImageUploaderViewModel()
         {
-            _eventAggregator = eventAggregator;
-            _uploader = new Uploader();
-            _uploader.DownloadProgressChanged += (position, maxvalue) =>
-                _eventAggregator.GetEvent<PbValueEvent>().Publish(new Tuple<int, double, double>(GetHashCode(), position, maxvalue));
+            _uploader = new Uploader();   
         }
 
         #region Private area
@@ -93,7 +89,7 @@ namespace ImageUploader.ViewModels
                 IsBusy = true;
                 ImageData = await _uploader.DownloadImage(URL);
             }
-            catch (Exception) { SystemSounds.Beep.Play(); }
+            catch (Exception e) { SystemSounds.Beep.Play(); }
             finally { IsBusy = false; }
         }
 
@@ -101,8 +97,28 @@ namespace ImageUploader.ViewModels
         {
             _uploader?.AbortDownloading();
             IsBusy = false;
-            _eventAggregator.GetEvent<PbValueEvent>().Publish(new Tuple<int, double, double>(GetHashCode(), 0, 0)); // прячем Progressbar
         }
+        #endregion
+
+        #region IDataErrorInfo implementation
+        public string this[string columnName]
+        {
+            get
+            {
+                string errorMessage = null;
+                switch (columnName)
+                {
+                    case "URL":
+                        if (string.IsNullOrWhiteSpace(URL))
+                            errorMessage = @"Поле ""URL"" не может быть пустым";
+                        break;
+
+                }
+                return errorMessage;
+            }
+        }
+
+        public string Error => this["URL"];
         #endregion
     }
 }

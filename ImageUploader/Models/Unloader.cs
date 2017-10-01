@@ -10,17 +10,8 @@ namespace ImageUploader.Models
     {
         private WebClient _client;
 
-        internal delegate void DownloadProgress(double position, double size);
-
-        private DownloadProgress _download;
-        /// <summary>
-        /// Отображает процесс загрузки
-        /// </summary>
-        internal event DownloadProgress DownloadProgressChanged
-        {
-            add { AddObserver(value); }
-            remove { RemoveObserver(value); }
-        }
+        public long BytesReceived { get; private set; }
+        public long TotalBytesToReceive { get; private set; }
 
         /// <summary>
         /// Начинает загрузку картинки по указанному url
@@ -29,6 +20,9 @@ namespace ImageUploader.Models
         /// <returns></returns>
         public async Task<byte[]> DownloadImage(string url)
         {
+            BytesReceived = 0;
+            TotalBytesToReceive = 0;
+            Summator.GetInstance().CountFrom(this);
             try { return await _client.DownloadDataTaskAsync(url); }
             catch (WebException e)
             {
@@ -42,39 +36,22 @@ namespace ImageUploader.Models
         /// <summary>
         /// Отменяет загрузку картинки
         /// </summary>
-        public void AbortDownloading() =>
+        public void AbortDownloading()
+        {
             _client?.CancelAsync();
-
-        #region private area
-        private void NotifyObservers(object sender, DownloadProgressChangedEventArgs e)
-        {
-            var handler = _download;
-            if (handler != null)
-                handler.Invoke(e.BytesReceived, e.TotalBytesToReceive);
+            BytesReceived = TotalBytesToReceive;
+            Summator.GetInstance().Forget(this);
         }
-
-        private void AddObserver(DownloadProgress value)
-        {
-            lock (this)
-            {
-                _download += value;
-                _client.DownloadProgressChanged += NotifyObservers;
-            }
-        }
-
-        private void RemoveObserver(DownloadProgress value)
-        {
-            lock (this)
-            {
-                _download -= value;
-                _client.DownloadProgressChanged -= NotifyObservers;
-            }
-        } 
-        #endregion
+    
 
         public Uploader()
         {
             _client = new WebClient();
+            _client.DownloadProgressChanged += (sender, e) =>
+            {
+                BytesReceived = e.BytesReceived;
+                TotalBytesToReceive = e.TotalBytesToReceive;
+            };                    
         }
 
         ~Uploader()

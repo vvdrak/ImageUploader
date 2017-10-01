@@ -31,10 +31,9 @@
 
             <ContentControl prism:RegionManager.RegionName="Uploader1"/>
             <ContentControl prism:RegionManager.RegionName="Uploader2" Grid.Column="2"/>
-            <ContentControl prism:RegionManager.RegionName="Uploader3" Grid.Column="4"/>
+            <ContentControl prism:RegionManager.RegionName="Uploader3"  Grid.Column="4"/>
             <Button Content="Загрузить всё" Grid.ColumnSpan="5" Grid.Row="2" Command="{x:Static global:GlobalCommands.StartAllCommand}"/>
         </Grid>
-        <ProgressBar Grid.Row="1" Value="{Binding PbValue, Mode=OneWay}" Maximum="{Binding PbMaxValue, Mode=OneWay}" 
-                     Visibility="{Binding PbVisibility, Converter={StaticResource booleanToVisibilityConverter}}"/>
+        <ProgressBar Grid.Row="1" Value="{Binding PbValue, Mode=OneWay}" Visibility="{Binding PbVisibility, Converter={StaticResource booleanToVisibilityConverter}}"/>
     </Grid>
 </Window>

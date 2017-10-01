@@ -82,9 +82,8 @@
     </ApplicationDefinition>
     <Compile Include="Converters\ByteArrayToBitmapImageConverter.cs" />
     <Compile Include="Bootstrapper.cs" />
-    <Compile Include="Events\PbValueEvent.cs" />
     <Compile Include="Helpers\GlobalCommands.cs" />
-    <Compile Include="Models\BitmapWrapper.cs" />
+    <Compile Include="Models\Summator.cs" />
     <Compile Include="Models\Unloader.cs" />
     <Compile Include="ViewModels\ImageUploaderViewModel.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
